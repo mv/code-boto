@@ -4,9 +4,8 @@
 
 import boto3
 import random
-
-# for x in range(10):
-#   print(random.randint(1,101))
+import datetime as dt
+import time
 
 vmin = 0
 vmax = 100
@@ -14,37 +13,43 @@ vmax = 100
 # 0: do not stop
 counter = 5
 
-queue_name = 'myorg-cloudtrail-deliveries'
-
-sqs     = boto3.client('sqs')
-sqs_url = sqs.get_queue_url(QueueName=queue_name)['QueueUrl']
+cw = boto3.client('cloudwatch')
 
 # "Timestamp" : "2018-12-26T18:52:46.218Z"
-#  print( datetime.strftime( datetime.today(), '%Y-%m-%dT%H:%M:%S.%f') )
-#  print( datetime.strftime( datetime.today(), '%Y-%m-%dT%H:%M:%S.%X') )
 #  https://stackoverflow.com/questions/41726845/convert-zulu-time-string-to-mst-datetime-object
+#
+#  iso_8601_str = '2018-12-26T18:52:46.218Z'
+#  iso_8601_dt  = dt.datetime.strptime(iso_8601_str[:-1], '%Y-%m-%dT%H:%M:%S.%f')
+#  iso_8601_tms = iso_8601_dt.timestamp()
+#
+#  iso_8601  = '2018-12-26T18:52:46.218Z'
+#  timestamp = dt.datetime.strptime(iso_8601[:-1], '%Y-%m-%dT%H:%M:%S.%f').timestamp()
 
-datetime.datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S.%f')
 
 count=1
 while True:
 
     val = random.randint(vmin,vmax)
-    MetricData = [{
+    tms = dt.datetime.now().timestamp()
+
+    metric = [{
         'MetricName': 'Deliveries',
         'Dimensions': [ { 'Name': 'Region', 'Value': 'us-east-1' }, ],
-        'Timestamp': datetime(2015, 1, 1),
-        'Value': val,
-        'Unit': 'Count'
+        'Timestamp':  tms,
+        'Value':      val,
+        'Unit':       'Count'
     }]
 
-    response = 1 #cw.put_metric_data(Namespace='CWTest', MetricData )
+    response = cw.put_metric_data(Namespace='CWTest', MetricData=metric)
+    res = response['ResponseMetadata']['HTTPStatusCode']
 
-    print('===== {}: {} {}'.format(count,val,response))
+    print( '===== {}: {} {} {}'.format(count,val,tms,res) )
 
     count+=1
     if   counter == 0: continue     # do not stop
     elif count > counter: break
+
+    time.sleep(5)
 
 
 print('End')
