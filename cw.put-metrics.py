@@ -32,6 +32,7 @@ while True:
     val = random.randint(vmin,vmax)
     tms = dt.datetime.now().timestamp()
 
+    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cloudwatch.html#CloudWatch.Client.put_metric_data
     metric = [{
         'MetricName': 'Deliveries',
         'Dimensions': [ { 'Name': 'Region', 'Value': 'us-east-1' }, ],
@@ -40,17 +41,17 @@ while True:
         'Unit':       'Count'
     }]
 
-    response = cw.put_metric_data(Namespace='CWTest', MetricData=metric)
-    res = response['ResponseMetadata']['HTTPStatusCode']
+    res  = cw.put_metric_data(Namespace='CWTest', MetricData=metric)
+    code = response['ResponseMetadata']['HTTPStatusCode']
 
-    print( '===== {}: {} {} {}'.format(count,val,tms,res) )
+    print( '===== {}: {} {} {}'.format(count,val,tms,code) )
+    time.sleep(5)
 
     count+=1
     if   counter == 0: continue     # do not stop
-    elif count > counter: break
+    elif count > counter: break     # stop when reaching counter
 
-    time.sleep(5)
-
+# end while
 
 print('End')
 
